@@ -1,0 +1,44 @@
+---
+- hosts: all
+  become: yes
+  tasks:
+    - name: Update the package list
+      apt:
+        update_cache: yes
+
+    - name: Install unattended-upgrades
+      apt:
+        name: unattended-upgrades
+        state: present
+
+    - name: Enable automatic updates
+      lineinfile:
+        path: /etc/apt/apt.conf.d/20auto-upgrades
+        line: "{{ item }}"
+        create: yes
+      loop:
+        - 'APT::Periodic::Update-Package-Lists "1";'
+        - 'APT::Periodic::Unattended-Upgrade "1";'
+
+    - name: Configure unattended-upgrades
+      blockinfile:
+        path: /etc/apt/apt.conf.d/50unattended-upgrades
+        block: |
+          Unattended-Upgrade::Allowed-Origins {
+              "${distro_id}:${distro_codename}-security";
+              // Weitere Optionen können hier hinzugefügt werden
+          };
+
+    - name: Test unattended-upgrades configuration
+      command: unattended-upgrade --dry-run --debug
+      register: upgrade_test
+      ignore_errors: yes
+
+    - name: Display test results
+      debug:
+        var: upgrade_test.stdout_lines
+
+    - name: Ensure log file exists
+      file:
+        path: /var/log/unattended-upgrades/unattended-upgrades.log
+        state: touch

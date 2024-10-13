@@ -1,0 +1,31 @@
+---
+- hosts: all
+  become: yes
+  tasks:
+    - name: Install UFW
+      apt:
+        name: ufw
+        state: present
+
+    - name: Allow OpenSSH
+      ufw:
+        rule: allow
+        name: OpenSSH
+
+    - name: Deny all other incoming connections
+      ufw:
+        rule: deny
+        from: any
+        to: any
+
+    - name: Enable UFW
+      ufw:
+        state: enabled
+
+    - name: Check UFW status
+      command: ufw status
+      register: ufw_status
+
+    - name: Display UFW status
+      debug:
+        var: ufw_status.stdout

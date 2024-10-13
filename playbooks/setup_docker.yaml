@@ -1,0 +1,33 @@
+---
+- hosts: all
+  become: yes
+  tasks:
+    - name: Update the package list
+      apt:
+        update_cache: yes
+
+    - name: Install Docker
+      apt:
+        name: 
+          - docker.io
+          - docker-compose
+        state: present
+
+    - name: Start and enable Docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Verify and display Docker and Docker Compose versions
+      block:
+        - command: docker --version
+          register: docker_version
+
+        - command: docker-compose --version
+          register: docker_compose_version
+
+        - debug:
+            msg: 
+              - "Docker version: {{ docker_version.stdout }}"
+              - "Docker Compose version: {{ docker_compose_version.stdout }}"
