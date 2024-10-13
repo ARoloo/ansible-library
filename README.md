@@ -19,8 +19,8 @@ Dieses Repository enthält Ansible-Playbooks zur Automatisierung von Serverkonfi
 1. Klone das Repository:
 
    ```bash
-   git clone https://github.com/deinbenutzername/deinrepository.git
-   cd deinrepository
+   git clone https://github.com/ARoloo/ansible-library.git
+   cd ansible-library
    ```
 
 2. Stelle sicher, dass alle Abhängigkeiten installiert sind, falls vorhanden.
