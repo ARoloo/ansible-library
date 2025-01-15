@@ -1,0 +1,36 @@
+---
+- name: Benutzer für Docker-Verwaltung erstellen
+  hosts: all
+  become: yes
+  vars:
+    user_name: dockeruser
+    user_password: "{{ 'password' | password_hash('sha512') }}"
+    ssh_key_path: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+
+  tasks:
+    - name: Installiere Docker, falls nicht vorhanden
+      apt:
+        name: docker.io
+        state: present
+
+    - name: Starte und aktiviere den Docker-Dienst
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Erstelle einen neuen Benutzer
+      user:
+        name: "{{ user_name }}"
+        password: "{{ user_password }}"
+        shell: /bin/bash
+        create_home: true
+        groups: docker
+        append: yes
+        state: present
+
+    - name: Füge den öffentlichen SSH-Schlüssel hinzu
+      authorized_key:
+        user: "{{ user_name }}"
+        state: present
+        key: "{{ ssh_key_path }}"
