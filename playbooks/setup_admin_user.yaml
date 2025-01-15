@@ -1,0 +1,46 @@
+---
+- name: Benutzer für Admin-Verwaltung erstellen
+  hosts: all
+  become: yes
+  vars:
+    user_name: admin
+    user_password: "{{ 'password' | password_hash('sha512') }}"
+    ssh_key_path: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+    ssh_config_path: "/etc/ssh/sshd_config.d/disable_password_authentication.conf"
+
+  tasks:
+    - name: Erstelle einen neuen Benutzer
+      user:
+        name: "{{ user_name }}"
+        password: "{{ user_password }}"
+        shell: /bin/bash
+        create_home: true
+        groups: sudo
+        append: yes
+        state: present
+
+    - name: Füge den öffentlichen SSH-Schlüssel hinzu
+      authorized_key:
+        user: "{{ user_name }}"
+        state: present
+        key: "{{ ssh_key_path }}"
+
+    - name: Kopiere die SSH-Konfiguration zur Deaktivierung der Passwortauthentifizierung
+      copy:
+        dest: "{{ ssh_config_path }}"
+        content: |
+          # Deaktiviere die Passwortauthentifizierung
+          PasswordAuthentication no
+
+          # Deaktiviere die Anmeldung für den Root-Benutzer
+          PermitRootLogin no
+
+    - name: Starte den SSH-Dienst neu
+      service:
+        name: sshd
+        state: restarted
+
+    - name: Aktiviere den SSH-Dienst beim Booten
+      systemd:
+        name: sshd
+        enabled: yes
